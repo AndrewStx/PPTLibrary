@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load" loadImage="GetItemImage">
+  <ribbon>
+    <tabs>
+      <tab  id="idTabGallery" label="+LIBRARY+">
+        <group id="idGalleryGroup" label="Library">
+          <button id="idLibr" label="View/Search" image="Library" size="large" onAction="OnOpenGalleryView" screentip="Library" supertip="Opens Library View and Search Task Pane."/>
+          <button id="idLibrM" label="Manage" image="Manage" size="large" onAction="OnManageGallery" screentip="Manage" supertip="Opens Library Management Dialog."/>
+          <button id="idLibr1" label="Personal" image="Personal" size="normal" onAction="OnAddToPersonal" screentip="Personal" supertip="Adds Active Presentation to Personal "/>
+          <!--<button id="idLibr2" label="Shared" image="Shared" size="normal" onAction="OnAddToShared" screentip="Shared" supertip="Adds Current Presentation to Shared "/>-->
+          <button id="idLibr3" label="Slide" image="AddSlide_1" size="normal" onAction="OnAddSlide" screentip="Slide" supertip="Pastes Selected Slide(s) to Library file."/>
+          <button id="idLibr4" label="Chart" image="AddSlide" size="normal" onAction="OnAddShape" screentip="Shape" supertip="Pastes Selected Slide(s) to Library file."/>
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>
+

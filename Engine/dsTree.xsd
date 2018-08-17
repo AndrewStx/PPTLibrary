@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="dsTree" targetNamespace="http://tempuri.org/dsTree.xsd" xmlns:mstns="http://tempuri.org/dsTree.xsd" xmlns="http://tempuri.org/dsTree.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" xmlns:msprop="urn:schemas-microsoft-com:xml-msprop" attributeFormDefault="qualified" elementFormDefault="qualified">
+  <xs:annotation>
+    <xs:appinfo source="urn:schemas-microsoft-com:xml-msdatasource">
+      <DataSource DefaultConnectionIndex="0" FunctionsComponentName="QueriesTableAdapter" Modifier="AutoLayout, AnsiClass, Class, Public" SchemaSerializationMode="IncludeSchema" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
+        <Connections />
+        <Tables />
+        <Sources />
+      </DataSource>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="dsTree" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="dsTree" msprop:Generator_UserDSName="dsTree">
+    <xs:complexType>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="Tree" msprop:Generator_TableClassName="TreeDataTable" msprop:Generator_TableVarName="tableTree" msprop:Generator_TablePropName="Tree" msprop:Generator_RowDeletingName="TreeRowDeleting" msprop:Generator_RowChangingName="TreeRowChanging" msprop:Generator_RowEvHandlerName="TreeRowChangeEventHandler" msprop:Generator_RowDeletedName="TreeRowDeleted" msprop:Generator_UserTableName="Tree" msprop:Generator_RowChangedName="TreeRowChanged" msprop:Generator_RowEvArgName="TreeRowChangeEvent" msprop:Generator_RowClassName="TreeRow">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="ID" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="1" msprop:Generator_ColumnVarNameInTable="columnID" msprop:Generator_ColumnPropNameInRow="ID" msprop:Generator_ColumnPropNameInTable="IDColumn" msprop:Generator_UserColumnName="ID" type="xs:int" />
+              <xs:element name="ParentID" msprop:Generator_ColumnVarNameInTable="columnParentID" msprop:Generator_ColumnPropNameInRow="ParentID" msprop:Generator_ColumnPropNameInTable="ParentIDColumn" msprop:Generator_UserColumnName="ParentID" type="xs:int" minOccurs="0" />
+              <xs:element name="ImageID" msprop:Generator_ColumnVarNameInTable="columnImageID" msprop:Generator_ColumnPropNameInRow="ImageID" msprop:Generator_ColumnPropNameInTable="ImageIDColumn" msprop:Generator_UserColumnName="ImageID" type="xs:int" minOccurs="0" />
+              <xs:element name="Name" msprop:Generator_ColumnVarNameInTable="columnName" msprop:Generator_ColumnPropNameInRow="Name" msprop:Generator_ColumnPropNameInTable="NameColumn" msprop:Generator_UserColumnName="Name" type="xs:string" minOccurs="0" />
+              <xs:element name="Data" msprop:Generator_ColumnVarNameInTable="columnData" msprop:Generator_ColumnPropNameInRow="Data" msprop:Generator_ColumnPropNameInTable="DataColumn" msprop:Generator_UserColumnName="Data" type="xs:anyType" minOccurs="0" />
+              <xs:element name="ReadOnly" msprop:Generator_ColumnVarNameInTable="columnReadOnly" msprop:Generator_ColumnPropNameInRow="ReadOnly" msprop:Generator_ColumnPropNameInTable="ReadOnlyColumn" msprop:Generator_UserColumnName="ReadOnly" type="xs:boolean" minOccurs="0" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+    <xs:unique name="Constraint1" msdata:PrimaryKey="true">
+      <xs:selector xpath=".//mstns:Tree" />
+      <xs:field xpath="mstns:ID" />
+    </xs:unique>
+  </xs:element>
+</xs:schema>
