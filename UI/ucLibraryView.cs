@@ -21,32 +21,16 @@ namespace Gallery
     public partial class ucLibraryView : UserControl
     {
         /// <summary>
-        /// Fired when Shared Folder is changed
+        /// Fired when Shared Folder configuation is changed
         /// </summary>
         public event EventHandler<EventArgs> ConfigChanged;
 
         public ILibrary LibraryData { get; set; }
 
-//        protected dsTree dsTree = new dsTree();
+        private dsTree.TreeDataTable treeTable { get; set; } = new dsTree.TreeDataTable();
 
-        protected dsTree.TreeDataTable tree { get => treeBuilder.TreeTable; }
+        private TreeTableBuilder treeBuilder = null;
 
-        protected TreeTableBuilder treeBuilder = null;
-
-
-        public ucLibraryView(ILibrary libraryData)
-        {
-            LibraryData = libraryData;
-
-            InitializeComponent();
-
-            //uxSearchGroup.Visible = uxCommandsGroup.Visible = false;
-            SetEmptyTextForWhat();
-            WhatButtonsEnable();
-
-            toolTipController.AutoPopDelay = Int32.MaxValue;
-            toolTipController.CalcSize += toolTipController_CalcSize;
-        }
 
         public ucLibraryView()
         {
@@ -60,8 +44,6 @@ namespace Gallery
             toolTipController.CalcSize += toolTipController_CalcSize;
 
             timerCheckForUpdates.Enabled = true;
-
-            //uxGalleryTable.SetData(GetAllItems());
             
             #region Test Generate slides
 
@@ -113,15 +95,6 @@ namespace Gallery
             */
             #endregion Generate slides
 
-
-            //for (int i = 0; i < imageCollection1.Images.Count; i++)
-            //{
-            //    imageCollection1.Images[i].Save(@"C:\WRK\IM1\" + i + ".png", ImageFormat.Png);
-            //}
-            //for (int i = 0; i < imageCollection2.Images.Count; i++)
-            //{
-            //    imageCollection2.Images[i].Save(@"C:\WRK\IM2\" + i + ".png", ImageFormat.Png);
-            //}
         }
 
         public void LoadLibraryAsync()
@@ -142,8 +115,8 @@ namespace Gallery
             {
                 //
             }
-            treeBuilder = new TreeTableBuilder(LibraryData);
-            uxWhere.Properties.DataSource = tree.DefaultView;
+            treeBuilder = new TreeTableBuilder(LibraryData, treeTable);
+            uxWhere.Properties.DataSource = treeTable.DefaultView;
 
             InitializeTreeControl();
             //uxSearchGroup.Visible = uxCommandsGroup.Visible = true;
@@ -172,11 +145,11 @@ namespace Gallery
             //uxWhere.Properties.DisplayMember = "Name";
             uxWhere.Properties.ValueMember = "ID";
 
-            dsTree.TreeRow rowRoot = tree[0];
+            dsTree.TreeRow rowRoot = treeTable[0];
             uxWhere.EditValue = rowRoot.ID;
             uxWhere.Properties.ContextImage = imageCollection1.Images[rowRoot.ImageID];
 
-            int cnt = Math.Min(20, tree.DefaultView.Count);
+            int cnt = Math.Min(20, treeTable.DefaultView.Count);
             Size sz = uxWhere.Properties.PopupFormSize;
             sz.Height = cnt * 28;
             uxWhere.Properties.PopupFormSize = sz;
@@ -202,7 +175,7 @@ namespace Gallery
             else
             {
                 SelectFileForm dlg = new SelectFileForm();
-                dlg.SetDataSource(tree);
+                dlg.SetDataSource(treeTable);
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     AddSelectedSlides(dlg.File);
@@ -260,7 +233,7 @@ namespace Gallery
             PublishFileIntoGroup(LibraryData.Shared);
         }
 
-        #region Tooltop
+        #region Tooltip
 
         void toolTipController_CalcSize(object sender, DevExpress.Utils.ToolTipControllerCalcSizeEventArgs e)
         {
@@ -621,8 +594,8 @@ Make sure you have permission to create files at this location.";
         {
             if (e.Button.Index == 1)
             {
-                dsTree.TreeRow row = tree.FindByID((int)uxWhere.EditValue);
-                row = tree.FindByID(row.ParentID);
+                dsTree.TreeRow row = treeTable.FindByID((int)uxWhere.EditValue);
+                row = treeTable.FindByID(row.ParentID);
                 if (row != null)
                 {
                     uxWhere.EditValue = row.ID;
@@ -632,7 +605,7 @@ Make sure you have permission to create files at this location.";
 
         private void uxWhere_EditValueChanging(object sender, ChangingEventArgs e)
         {
-            dsTree.TreeRow row = tree.FindByID((int)e.NewValue);
+            dsTree.TreeRow row = treeTable.FindByID((int)e.NewValue);
 
             if (row.ParentID != -1 && row.Data.Equals(System.DBNull.Value))
             {
@@ -649,7 +622,7 @@ Make sure you have permission to create files at this location.";
 
         private void uxWhere_EditValueChanged(object sender, EventArgs e)
         {
-            dsTree.TreeRow row = tree.FindByID((int)uxWhere.EditValue);
+            dsTree.TreeRow row = treeTable.FindByID((int)uxWhere.EditValue);
             uxWhere.Properties.ContextImage = imageCollection1.Images[row.ImageID];
             uxWhere.Properties.Buttons[1].Enabled = row.ParentID != 0-1;
 
@@ -742,7 +715,7 @@ Make sure you have permission to create files at this location.";
 
             Regex regEx = new Regex(uxWhat.Tag == null ? uxWhat.Text : "", RegexOptions.IgnoreCase);
 
-            dsTree.TreeRow row = tree.FindByID((int)uxWhere.EditValue);
+            dsTree.TreeRow row = treeTable.FindByID((int)uxWhere.EditValue);
             var list = LibraryData.GetAllItems();
             if (row.ParentID == -1)
             {
@@ -852,15 +825,23 @@ Make sure you have permission to create files at this location.";
                 }
                 else
                 {
-                    row = tree.FindByID((int)uxWhere.EditValue);
+                    row = treeTable.FindByID((int)uxWhere.EditValue);
+
                     if (row.ParentID == -1)
+                    {
                         treeLevel = 0;
+                    }
                     else if (row.ParentID == 1)
+                    {
                         treeLevel = 1;
+                    }
                     else
+                    {
                         treeLevel = 2;
+                    }
 
                 }
+
                 if (treeLevel == 0)
                 {
                     cmdManage.Visibility = BarItemVisibility.Always;
@@ -954,7 +935,6 @@ Make sure you have permission to create files at this location.";
             {
                 OpenPresentation(file.FullPath);
             }
-
         }
 
         private void cmdOpenContainingFile_ItemClick(object sender, ItemClickEventArgs e)
@@ -983,9 +963,8 @@ Make sure you have permission to create files at this location.";
             LibraryData.UpdateFilesList();
             uxImagesView.DataSource = LibraryData.GetAllItems().ToList();
 
-
-            treeBuilder = new TreeTableBuilder(LibraryData);
-            uxWhere.Properties.DataSource = tree.DefaultView;
+            treeBuilder.Load();
+            uxWhere.Properties.DataSource = treeTable.DefaultView;
 
             Filter();
             needsUpdate = false;
@@ -994,81 +973,6 @@ Make sure you have permission to create files at this location.";
             timerCheckForUpdates.Enabled = true;
         }
 
-        private void ucLibraryView_Leave(object sender, EventArgs e)
-        {
-
-        }
     }
-
-    //using (ZipArchive zip = new ZipArchive(
-    //    new FileStream(@"C:\WRK\_GallerySys\z.zip", FileMode.OpenOrCreate)
-    //    , ZipArchiveMode.Create)
-    //    )
-    //{
-    //    for (int i = 0; i < 100; i++ )
-    //        zip.CreateEntryFromFile(@"C:\WRK\_GallerySys\1.png", "INDEX\\N"+i);
-
-    //}
-
-        //private static String WildCardToRegular(String value)
-        //{
-        //    return "^" + Regex.Escape(value).Replace("\\?", ".").Replace("\\*", ".*") + "$";
-        //}
-        ////    String test = "Some Data X";
-
-        ////    Boolean endsWithEx = Regex.IsMatch(test, WildCardToRegular("*X"));
-        ////    Boolean startsWithS = Regex.IsMatch(test, WildCardToRegular("S*"));
-        ////    Boolean containsD = Regex.IsMatch(test, WildCardToRegular("*D*"));
-
-        ////    // Starts with S, ends with X, contains "me" and "a" (in that order) 
-        ////    Boolean complex = Regex.IsMatch(test, WildCardToRegular("S*me*a*X"));
-        ////
-
-        //public static Bitmap ResizeImage(Image image, int width, int height)
-        //{
-        //    var destRect = new Rectangle(0, 0, width, height);
-        //    var destImage = new Bitmap(width, height);
-
-        //    destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
-
-        //    using (var graphics = Graphics.FromImage(destImage))
-        //    {
-        //        graphics.CompositingMode = CompositingMode.SourceCopy;
-        //        graphics.CompositingQuality = CompositingQuality.HighQuality;
-        //        graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-        //        graphics.SmoothingMode = SmoothingMode.HighQuality;
-        //        graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-
-        //        using (var wrapMode = new System.Drawing.Imaging.ImageAttributes())
-        //        {
-        //            wrapMode.SetWrapMode(WrapMode.TileFlipXY);
-        //            graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
-        //        }
-        //    }
-
-        //    return destImage;
-        //}
-
-    //var lBackup = new Dictionary<string, object>(); 
-    //var lDataObject = Clipboard.GetDataObject();
-    //var lFormats = lDataObject.GetFormats(false);
-    //foreach (var lFormat in lFormats)
-    //{
-    //    var vv = lDataObject.GetData(lFormat, false);
-    //    lBackup.Add(lFormat, vv);
-    //}
-
-    //Clipboard.SetText("asd");
-
-    ////Would be interesting to check the contents of lDataObject here
-
-    ////Restore data
-    //foreach (var lFormat in lFormats)
-    //{
-    //    lDataObject.SetData(lBackup[lFormat]);
-    //}
-    ////This might be unnecessary
-    //Clipboard.SetDataObject(lDataObject);
-    //                popupControlContainer1.ShowPopup(this.PointToScreen(new Point(uxAddSlide.Left, uxAddSlide.Bottom)));
-
+   
 }

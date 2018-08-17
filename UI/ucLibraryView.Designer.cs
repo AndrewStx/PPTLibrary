@@ -398,7 +398,6 @@
             this.DoubleBuffered = true;
             this.Name = "ucLibraryView";
             this.Size = new System.Drawing.Size(512, 541);
-            this.Leave += new System.EventHandler(this.ucLibraryView_Leave);
             this.uxContainer.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.imageCollection1)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);

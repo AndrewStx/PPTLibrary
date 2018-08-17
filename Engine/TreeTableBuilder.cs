@@ -4,76 +4,76 @@ namespace ShapesLibrary
 {
     public class TreeTableBuilder
     {
-        public dsTree.TreeDataTable TreeTable { get { return dsTree.Tree; } }
+        protected ILibrary library;
 
-        protected ILibrary libraryData;
-
-        protected dsTree dsTree = new dsTree();
+        protected dsTree.TreeDataTable table;
 
         protected dsTree.TreeRow rowRoot;
         protected dsTree.TreeRow rowSystem;
         protected dsTree.TreeRow rowPersonal;
         public dsTree.TreeRow RowShared { get; protected set; }
 
-        public TreeTableBuilder(ILibrary libraryData)
+        public TreeTableBuilder(ILibrary libraryData, dsTree.TreeDataTable treeTable)
         {
-            this.libraryData = libraryData;
-            LoadDataTableFromLibrary();
+            library = libraryData;
+            table = treeTable;
+
+            Load();
         }
 
-        protected void LoadDataTableFromLibrary()
+        public void Load()
         {
-            dsTree = new dsTree();
-            rowRoot = dsTree.Tree.AddTreeRow(-1, 0, "All Libraries", null, false); //TODO: Make consts
-            rowSystem = dsTree.Tree.AddTreeRow(rowRoot.ID, 1, "System Library", libraryData.System, true);
-            rowPersonal = dsTree.Tree.AddTreeRow(rowRoot.ID, 2, "Personal Library", libraryData.Personal, false);
-            RowShared = dsTree.Tree.AddTreeRow(rowRoot.ID, 3, "Shared Library", libraryData.Shared, false);
+            table.Clear();
 
-            foreach (LibraryFile f in libraryData.System.Files)
+            rowRoot = table.AddTreeRow(-1, 0, "All Libraries", null, false); //TODO: Make consts
+            rowSystem = table.AddTreeRow(rowRoot.ID, 1, "System Library", library.System, true);
+            rowPersonal = table.AddTreeRow(rowRoot.ID, 2, "Personal Library", library.Personal, false);
+            RowShared = table.AddTreeRow(rowRoot.ID, 3, "Shared Library", library.Shared, false);
+
+            foreach (LibraryFile f in library.System.Files)
             {
-                dsTree.Tree.AddTreeRow(rowSystem.ID, 4, f.Name, f, true);
+                table.AddTreeRow(rowSystem.ID, 4, f.Name, f, true);
             }
 
-            FillNode(libraryData.Personal, rowPersonal.ID);
+            FillNode(library.Personal, rowPersonal.ID);
 
             //libraryData.Personal?.Files.Where(f => !f.Hidden).Select(f =>
-            //    dsTree.Tree.AddTreeRow(rowPersonal.ID, 4, f.Name, f, false));
+            //    Tree.AddTreeRow(rowPersonal.ID, 4, f.Name, f, false));
 
             //TODO: For now only System and Personal folders
             //if (libraryData.Shared != null)
             //{
             //    foreach (LibraryFile f in libraryData.Shared.Files)
             //    {
-            //        dsTree.Tree.AddTreeRow(RowShared.ID, 4, f.Name, f, false);
+            //        Tree.AddTreeRow(RowShared.ID, 4, f.Name, f, false);
             //    }
             //}
             //else
             //{
             //    RowShared.Name += " (Not Configured).";
             //}
-            dsTree.Tree.AcceptChanges();
+            table.AcceptChanges();
         }
 
         protected void FillNode(IGroup group, int parentID)
         {
             group.Folders.ForEach(subFolder =>
             {
-                dsTree.TreeRow row = dsTree.Tree.AddTreeRow(parentID, 0, subFolder.Name, subFolder, false);
+                var row = table.AddTreeRow(parentID, 0, subFolder.Name, subFolder, false);
                 FillNode(subFolder, row.ID);
             });
 
             group.Files.Where(f => !f.Hidden).ForEach(file =>
             {
-                dsTree.Tree.AddTreeRow(parentID, 4, file.Name, file, false);
+                table.AddTreeRow(parentID, 4, file.Name, file, false);
             });
         }
 
         public void ReloadGroupData(IGroup group)
         {
-            dsTree.TreeRow rw
-                = dsTree.Tree.Where(row => row.Data.Equals(group)).FirstOrDefault();
+            var groupRow = table.Where(row => row.Data.Equals(group)).FirstOrDefault();
 
-            var list = dsTree.Tree.Where(row => row.ParentID == rw.ID).ToList();
+            var list = table.Where(row => row.ParentID == groupRow.ID).ToList();
             foreach (var row in list)
             {
                 row.Delete();
@@ -81,36 +81,36 @@ namespace ShapesLibrary
 
             foreach (LibraryFile f in group.Files)
             {
-                dsTree.Tree.AddTreeRow(rw.ID, 4, f.Name, f, false);
+                table.AddTreeRow(groupRow.ID, 4, f.Name, f, false);
             }
 
-            dsTree.Tree.AcceptChanges();
+            table.AcceptChanges();
         }
 
         public void UpdateShared()
         {
             if (RowShared == null)
             {
-                RowShared = dsTree.Tree.AddTreeRow(dsTree.Tree[0].ID, 3, "Shared Library", libraryData.Shared, false);
+                RowShared = table.AddTreeRow(table[0].ID, 3, "Shared Library", library.Shared, false);
             }
             else
             {
                 RowShared.Name = "Shared Library";
-                RowShared.Data = libraryData.Shared;
-                libraryData.Shared.LoadFiles(false);
-                ReloadGroupData(libraryData.Shared);
+                RowShared.Data = library.Shared;
+                library.Shared.LoadFiles(false);
+                ReloadGroupData(library.Shared);
             }
         }
 
         public void AddFile(IFile file)
         {
-            dsTree.TreeRow rowGroup = TreeTable.Where(row =>
+            var groupRow = table.Where(row =>
                     row.Data is LibraryGroup && (row.Data as LibraryGroup).Name == file.Group.Name
                 ).FirstOrDefault();
 
-            if (rowGroup != null)
+            if (groupRow != null)
             {
-                TreeTable.AddTreeRow(rowGroup.ID, 4, file.Name, file, false);
+                table.AddTreeRow(groupRow.ID, 4, file.Name, file, false);
             }
 
         }
