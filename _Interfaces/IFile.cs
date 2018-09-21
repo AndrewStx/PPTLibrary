@@ -15,6 +15,7 @@ namespace ShapesLibrary
 
         string Name { get; }
 
+
         bool Hidden { get; }
 
         ReadOnlyCollection<IFileItem> Items { get; }
@@ -32,6 +33,8 @@ namespace ShapesLibrary
         void Delete();
 
         IFileItem CreateItem(int id);
+
+        void Rename(string newName);
     }
 
 }

@@ -18,12 +18,13 @@ namespace ShapesLibrary
     /// </summary>
     public class IndexFileAdapter : IIndexProvider
     {
-        const int ThumbnailWidth = 320; //TODO: Make parameter/Property
         const string ZIPEntry_IndexFileName = @"Index.txt";
         const string ZIPEntry_ImagesFolder = @"Images/";
-        const string IndexFolder = @"CompanyName\SlideLibraryIndex";    //TODO: Make parameter/Property
 
-        protected string indexFileFullName;
+        public int ThumbnailWidth { get; set; }
+
+
+        protected string indexFileFullName => Path.Combine(indexFolder, LibraryFile.Group.FullName, filename);
 
         public IFile LibraryFile { get; protected set; }
 
@@ -31,16 +32,25 @@ namespace ShapesLibrary
 
         private List<IFileItem> items = new List<IFileItem>();
 
-        public IndexFileAdapter(IFile libraryFile)
+        string indexFolder;
+        string filename;
+
+        public IndexFileAdapter(IFile libraryFile, string indexFolder)
         {
             this.LibraryFile = libraryFile;
-            indexFileFullName = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                IndexFolder,
-                libraryFile.Group.Name,
-                Path.ChangeExtension( Path.GetFileName(libraryFile.FullPath), ".zip")
-            );
+            this.indexFolder = indexFolder;
+            filename = GetIndexFileName();
         }
+
+        public void Rename()
+        {
+            string oldPath = indexFileFullName;
+            filename = GetIndexFileName();
+            File.Move(oldPath, indexFileFullName);
+        }
+
+
+        private string GetIndexFileName() => Path.ChangeExtension(Path.GetFileName(LibraryFile.FullPath), ".zip");
 
         public void LoadIndex()
         {
@@ -71,41 +81,6 @@ namespace ShapesLibrary
             }
         }
 
-        protected bool ReadIndex()
-        {
-            try
-            {
-                using (FileStream zipFile = new FileStream(indexFileFullName, FileMode.Open))
-                {
-                    using (ZipArchive zip = new ZipArchive(zipFile, ZipArchiveMode.Read))
-                    {
-                        ZipArchiveEntry e = zip.GetEntry(ZIPEntry_IndexFileName);  //TODO: If not found?
-                        Stream es = e.Open();
-                        using (StreamReader file = new System.IO.StreamReader(es))
-                        {
-                            int i = 0;
-                            IFileItem item;
-                            while ((item = ReadItem(file, ++i)) != null)
-                            {
-                                ZipArchiveEntry imageFile = zip.GetEntry(ZIPEntry_ImagesFolder + i + ".png"); //TODO: If not found?
-                                if (imageFile == null)
-                                {
-                                    return false;
-                                }
-                                Bitmap img = (Bitmap)Image.FromStream(imageFile.Open());
-                                item.Image = img;
-                                items.Add(item);
-                            }
-                        }
-                    }
-                }
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
 
         /// <summary>
         /// Scans pptx file and creates Index
@@ -360,102 +335,6 @@ namespace ShapesLibrary
             }
         }
 
-        protected void Save(List<IFileItem> items, string indexFile)
-        {
-            TextWriter wr = File.AppendText(indexFile);//TODO: Exception is possible here
-            foreach (IFileItem item in items)
-            {
-                WriteItem(item, wr);
-            }
-            wr.Close();
-        }
-
-        protected void WriteItem(IFileItem item, TextWriter wr)
-        {
-            wr.WriteLine(item.Index.ToString());                        //1
-            wr.WriteLine(XmlConvert.EncodeName(item.Type.ToString()));  //2
-            wr.WriteLine(XmlConvert.EncodeName(item.ShapesCount.ToString()));  //3
-            wr.WriteLine(XmlConvert.EncodeName(item.Title));            //4
-            wr.WriteLine(XmlConvert.EncodeName(item.Description));      //5
-            wr.WriteLine(XmlConvert.EncodeName(item.Keywords));         //6
-            wr.WriteLine("### " + item.Index.ToString());               //7
-        }
-
-        /// <summary>
-        /// Reads one item form current position of the stream assosiated with index file. 
-        /// index parameter if used for verification
-        /// </summary>
-        /// <param name="stream"></param>
-        /// <param name="index"></param>
-        /// <returns></returns>
-        protected IFileItem ReadItem(StreamReader stream, int index)
-        {
-            IFileItem row = LibraryFile.CreateItem(index);
-
-            string str;
-            str = stream.ReadLine();
-            if (str == null)
-            {
-                return null;
-            }
-
-            int idx = -1;
-            if (!int.TryParse(str, out idx) || idx != index)    //Broken structure
-            {
-                // return null;
-            }
-
-            str = stream.ReadLine();
-            if (str == null)
-            {
-                return null;
-            }
-            str = XmlConvert.DecodeName(str);
-
-            ItemType type = ItemType.Slide;
-            Enum.TryParse<ItemType>(str, out type);
-            {
-                row.Type = type;
-            }
-
-            int count = 0;
-            int.TryParse(str, out count);
-            {
-                row.ShapesCount = count;
-            }
-
-            str = stream.ReadLine();
-            if (str == null)
-            {
-                return null;
-            }
-            str = XmlConvert.DecodeName(str);
-            row.Title = str;
-
-            str = stream.ReadLine();
-            if (str == null)
-            {
-                return null;
-            }
-            str = XmlConvert.DecodeName(str);
-            row.Description = str;
-
-            str = stream.ReadLine();
-            if (str == null)
-            {
-                return null;
-            }
-            str = XmlConvert.DecodeName(str);
-            row.Keywords = str;
-
-            str = stream.ReadLine();
-            if (str != "### " + index)
-            {
-                //Broken structure
-            }
-            return row;
-        }
-
         dynamic GetAddin()
         {
             PPT.Application ppt = new PPT.Application();
@@ -480,7 +359,7 @@ namespace ShapesLibrary
 
             return mgAddin;
         }
-        
+
         /*
         public List<IFileItem> Append(List<PPT.Slide> srcSlides)
         {
@@ -547,6 +426,149 @@ namespace ShapesLibrary
             }
         }
         */
+
+        #region File I/O operations
+        protected bool ReadIndex()
+        {
+            try
+            {
+                using (FileStream zipFile = new FileStream(indexFileFullName, FileMode.Open))
+                {
+                    using (ZipArchive zip = new ZipArchive(zipFile, ZipArchiveMode.Read))
+                    {
+                        ZipArchiveEntry e = zip.GetEntry(ZIPEntry_IndexFileName);  //TODO: If not found?
+                        Stream es = e.Open();
+                        using (StreamReader file = new System.IO.StreamReader(es))
+                        {
+                            int i = 0;
+                            IFileItem item;
+                            while ((item = ReadItem(file, ++i)) != null)
+                            {
+                                ZipArchiveEntry imageFile = zip.GetEntry(ZIPEntry_ImagesFolder + i + ".png"); //TODO: If not found?
+                                if (imageFile == null)
+                                {
+                                    return false;
+                                }
+                                Bitmap img = (Bitmap)Image.FromStream(imageFile.Open());
+                                item.Image = img;
+                                items.Add(item);
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Reads one item form current position of the stream assosiated with index file. 
+        /// index parameter if used for verification
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        protected IFileItem ReadItem(StreamReader stream, int index)
+        {
+            IFileItem row = LibraryFile.CreateItem(index);
+
+            string str;
+            str = stream.ReadLine();    // 1
+            if (str == null)
+            {
+                return null;
+            }
+
+            int idx = -1;
+            if (!int.TryParse(str, out idx) || idx != index)    //Broken structure
+            {
+                // return null;
+            }
+
+            str = stream.ReadLine();    // 2
+            if (str == null)
+            {
+                return null;
+            }
+            str = XmlConvert.DecodeName(str);
+
+            ItemType type = ItemType.Slide;
+            Enum.TryParse<ItemType>(str, out type);
+            {
+                row.Type = type;
+            }
+
+            str = stream.ReadLine();    // 3
+            if (str == null)
+            {
+                return null;
+            }
+            int.TryParse(str, out int count);
+            {
+                row.ShapesCount = count;
+            }
+
+            str = stream.ReadLine();    // 4
+            if (str == null)
+            {
+                return null;
+            }
+            str = XmlConvert.DecodeName(str);
+            row.Title = str;
+
+            str = stream.ReadLine();    // 5
+            if (str == null)
+            {
+                return null;
+            }
+            str = XmlConvert.DecodeName(str);
+            row.Description = str;
+
+            str = stream.ReadLine();    // 6
+            if (str == null)
+            {
+                return null;
+            }
+            str = XmlConvert.DecodeName(str);
+            row.Keywords = str;
+
+            str = stream.ReadLine();     // 7
+            if (str != "### " + index)
+            {
+                //Broken structure
+                return null;
+            }
+            return row;
+        }
+
+        protected void Save(IEnumerable<IFileItem> items, string indexFile)
+        {
+            TextWriter wr = File.AppendText(indexFile);//TODO: Exception is possible here
+            foreach (IFileItem item in items)
+            {
+                WriteItem(item, wr);
+            }
+            wr.Close();
+        }
+
+        protected void WriteItem(IFileItem item, TextWriter wr)
+        {
+            wr.WriteLine(XmlConvert.ToString(item.Index));              //1
+            wr.WriteLine(XmlConvert.EncodeName(item.Type.ToString()));  //2
+            wr.WriteLine(XmlConvert.ToString(item.ShapesCount));        //3
+            wr.WriteLine(XmlConvert.EncodeName(item.Title));            //4
+            wr.WriteLine(XmlConvert.EncodeName(item.Description));      //5
+            wr.WriteLine(XmlConvert.EncodeName(item.Keywords));         //6
+            wr.WriteLine("### " + item.Index.ToString());               //7
+        }
+
+
+        #endregion
+
+
 
     }
 }

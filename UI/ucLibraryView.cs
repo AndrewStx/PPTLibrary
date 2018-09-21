@@ -191,6 +191,13 @@ namespace Gallery
             }
             else 
             {
+                SelectFileForm dlg = new SelectFileForm();
+                dlg.SetDataSource(treeTable);
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    AddSelectedSlides(dlg.File);
+                }
+
                 if (LibraryData.Personal.ShapesFile == null)
                 {
                     LibraryData.Personal.CreateShapesFile();

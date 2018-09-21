@@ -15,6 +15,11 @@ namespace ShapesLibrary
         /// <param name="libraryFile"></param>
         /// <returns></returns>
         IIndexProvider Create(IFile libraryFile);
+
+        void RenameGroup(string oldName, string newName);
+
+        void DeleteGroup(string groupName);
+
     }
 
     public interface IIndexProvider
@@ -41,6 +46,9 @@ namespace ShapesLibrary
         DateTime LatestUpdate { get; }
 
         void DeleteIndexFile();
+
+        void Rename();
+
     }
 
 }

@@ -22,10 +22,12 @@ namespace ShapesLibrary
         /// </summary>
         public string Name { get; protected set; }
 
+        public string FullName { get => Parent == null? Name: Path.Combine(Parent.Name, Name); }
+
         /// <summary>
         /// Path to Folder where group's files are reside
         /// </summary>
-        public string FullPath { get; protected set; }
+        public string FullPath { get => Parent == null? basePath: Path.Combine(Parent.FullPath, Name); }
 
         public IFile ShapesFile { get; protected set; }
 
@@ -40,14 +42,26 @@ namespace ShapesLibrary
 
         protected List<IFile> allFiles = new List<IFile>();
 
-        public ReadOnlyCollection<IGroup> Folders { get { return folders.AsReadOnly(); } }
+        public ReadOnlyCollection<IGroup> SubGroups { get { return subGroups.AsReadOnly(); } }
 
-        protected List<IGroup> folders = new List<IGroup>();
+        protected List<IGroup> subGroups = new List<IGroup>();
 
-        public LibraryGroup(string name, string folder, IIndexProviderFactory indexFileFactory)
+        public IGroup Parent { get; protected set; } = null;
+
+        string basePath = null;
+
+        public LibraryGroup(string name, string baseFolder, IIndexProviderFactory indexFileFactory)
         {
             Name = name;
-            FullPath = folder;
+            basePath = baseFolder;
+
+            this.indexFileFactory = indexFileFactory;
+        }
+
+        public LibraryGroup(IGroup parent, string name, IIndexProviderFactory indexFileFactory)
+        {
+            Parent = parent;
+            Name = name;
 
             this.indexFileFactory = indexFileFactory;
         }
@@ -94,12 +108,24 @@ namespace ShapesLibrary
                 foreach (string path in Directory.GetDirectories(FullPath))
                 {
                     string name = Path.GetFileName(path);
-                    LibraryGroup group = new LibraryGroup(name, path, indexFileFactory);
+
+                    LibraryGroup group = new LibraryGroup(this, name, indexFileFactory);
                     group.LoadFiles(forceToRebuildIndex);
-                    folders.Add(group);
+
+                    subGroups.Add(group);
                     allFiles.AddRange(group.AllFiles);
                 }
             }
+        }
+
+        public void Rename(string newName)
+        {
+            string oldPath = FullPath;
+            string oldName = FullName;
+            Name = newName;
+
+            Directory.Move(oldPath, FullPath);
+            indexFileFactory.RenameGroup(oldName, FullName);
         }
 
         protected void LoadFile(string filePath, bool forceToRebuildIndex)
@@ -122,6 +148,28 @@ namespace ShapesLibrary
         public bool ContainsFile(string fileName)
         {
             return File.Exists(Path.Combine(FullPath, Path.GetFileName(fileName)));
+        }
+
+        /// <summary>
+        /// Returns true if Group Folder contain file with specified name
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool ContainsFolder(string name)
+        {
+            return Directory.Exists(Path.Combine(FullPath, Path.GetFileName(name)));
+        }
+
+        public IGroup CreateGroup(string name)
+        {
+            Directory.CreateDirectory(Path.Combine(FullPath, name));
+            LibraryGroup group = new LibraryGroup(this, name, indexFileFactory);
+            group.LoadFiles(false);
+
+            subGroups.Add(group);
+            allFiles.AddRange(group.AllFiles);
+
+            return group;
         }
 
         /// <summary>
@@ -163,6 +211,19 @@ namespace ShapesLibrary
                 }
                 throw ex;
             }
+        }
+
+        public IFile AddFile(string fileName)
+        {
+            string newFilePath = Path.Combine(FullPath, Path.GetFileName(fileName));
+
+            var file = new LibraryFile(this, fileName, indexFileFactory);
+            file.LoadItems(true);
+
+            files.Add(file);
+
+            return file;
+
         }
 
 
@@ -316,6 +377,30 @@ namespace ShapesLibrary
                     yield return item;
                 }
             }
+
+        }
+
+
+        public void Delete(IFile file)
+        {
+            file.Delete();
+
+            allFiles.Remove(file);
+            files.Remove(file);
+        }
+
+
+        public void Delete(IGroup group)
+        {
+            if (Directory.Exists(group.FullPath))
+            {
+                Directory.Delete(group.FullPath, true);
+            }
+
+            indexFileFactory.DeleteGroup(group.FullName);
+
+            subGroups.Remove(group);
+            group.AllFiles.ForEach(file => allFiles.Remove(file));
 
         }
     }

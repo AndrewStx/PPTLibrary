@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using System.IO;
+
 
 namespace ShapesLibrary
 {
@@ -27,12 +29,13 @@ namespace ShapesLibrary
 
             rowRoot = table.AddTreeRow(-1, 0, "All Libraries", null, false); //TODO: Make consts
             rowSystem = table.AddTreeRow(rowRoot.ID, 1, "System Library", library.System, true);
-            rowPersonal = table.AddTreeRow(rowRoot.ID, 2, "Personal Library", library.Personal, false);
-            RowShared = table.AddTreeRow(rowRoot.ID, 3, "Shared Library", library.Shared, false);
+            rowPersonal = table.AddTreeRow(rowRoot.ID, 2, "My Library", library.Personal, false);
+
+            //            RowShared = table.AddTreeRow(rowRoot.ID, 3, "Shared Library", library.Shared, false);
 
             foreach (LibraryFile f in library.System.Files)
             {
-                table.AddTreeRow(rowSystem.ID, 4, f.Name, f, true);
+                table.AddTreeRow(rowSystem.ID, 4, Path.GetFileNameWithoutExtension(f.Name), f, true);
             }
 
             FillNode(library.Personal, rowPersonal.ID);
@@ -57,7 +60,7 @@ namespace ShapesLibrary
 
         protected void FillNode(IGroup group, int parentID)
         {
-            group.Folders.ForEach(subFolder =>
+            group.SubGroups.ForEach(subFolder =>
             {
                 var row = table.AddTreeRow(parentID, 0, subFolder.Name, subFolder, false);
                 FillNode(subFolder, row.ID);
@@ -65,7 +68,7 @@ namespace ShapesLibrary
 
             group.Files.Where(f => !f.Hidden).ForEach(file =>
             {
-                table.AddTreeRow(parentID, 4, file.Name, file, false);
+                table.AddTreeRow(parentID, 4, Path.GetFileNameWithoutExtension(file.Name), file, false);
             });
         }
 
@@ -89,17 +92,17 @@ namespace ShapesLibrary
 
         public void UpdateShared()
         {
-            if (RowShared == null)
-            {
-                RowShared = table.AddTreeRow(table[0].ID, 3, "Shared Library", library.Shared, false);
-            }
-            else
-            {
-                RowShared.Name = "Shared Library";
-                RowShared.Data = library.Shared;
-                library.Shared.LoadFiles(false);
-                ReloadGroupData(library.Shared);
-            }
+        //    if (RowShared == null)
+        //    {
+        //        RowShared = table.AddTreeRow(table[0].ID, 3, "Shared Library", library.Shared, false);
+        //    }
+        //    else
+        //    {
+        //        RowShared.Name = "Shared Library";
+        //        RowShared.Data = library.Shared;
+        //        library.Shared.LoadFiles(false);
+        //        ReloadGroupData(library.Shared);
+        //    }
         }
 
         public void AddFile(IFile file)
@@ -110,7 +113,7 @@ namespace ShapesLibrary
 
             if (groupRow != null)
             {
-                table.AddTreeRow(groupRow.ID, 4, file.Name, file, false);
+                table.AddTreeRow(groupRow.ID, 4, Path.GetFileNameWithoutExtension(file.Name), file, false);
             }
 
         }

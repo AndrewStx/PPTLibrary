@@ -12,7 +12,7 @@
   <xs:element name="dsTree" msdata:IsDataSet="true" msdata:UseCurrentLocale="true" msprop:EnableTableAdapterManager="true" msprop:Generator_DataSetName="dsTree" msprop:Generator_UserDSName="dsTree">
     <xs:complexType>
       <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="Tree" msprop:Generator_TableClassName="TreeDataTable" msprop:Generator_TableVarName="tableTree" msprop:Generator_TablePropName="Tree" msprop:Generator_RowDeletingName="TreeRowDeleting" msprop:Generator_RowChangingName="TreeRowChanging" msprop:Generator_RowEvHandlerName="TreeRowChangeEventHandler" msprop:Generator_RowDeletedName="TreeRowDeleted" msprop:Generator_UserTableName="Tree" msprop:Generator_RowChangedName="TreeRowChanged" msprop:Generator_RowEvArgName="TreeRowChangeEvent" msprop:Generator_RowClassName="TreeRow">
+        <xs:element name="Tree" msprop:Generator_TableClassName="TreeDataTable" msprop:Generator_TableVarName="tableTree" msprop:Generator_RowChangedName="TreeRowChanged" msprop:Generator_TablePropName="Tree" msprop:Generator_RowDeletingName="TreeRowDeleting" msprop:Generator_RowChangingName="TreeRowChanging" msprop:Generator_RowEvHandlerName="TreeRowChangeEventHandler" msprop:Generator_RowDeletedName="TreeRowDeleted" msprop:Generator_RowClassName="TreeRow" msprop:Generator_UserTableName="Tree" msprop:Generator_RowEvArgName="TreeRowChangeEvent">
           <xs:complexType>
             <xs:sequence>
               <xs:element name="ID" msdata:AutoIncrement="true" msdata:AutoIncrementSeed="1" msprop:Generator_ColumnVarNameInTable="columnID" msprop:Generator_ColumnPropNameInRow="ID" msprop:Generator_ColumnPropNameInTable="IDColumn" msprop:Generator_UserColumnName="ID" type="xs:int" />

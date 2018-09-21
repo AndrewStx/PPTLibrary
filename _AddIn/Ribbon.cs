@@ -115,7 +115,9 @@ namespace PPTShapesLibraryAddIn
                     PersonalFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), @"_ShapesLibrary");
                     SharedFolder = Properties.Settings.Default.SharedFolder;
 
-                    library = new Library(SystemFolder, PersonalFolder, SharedFolder, new IndexFileProviderFactory());
+                    library = new Library(SystemFolder, PersonalFolder, SharedFolder, 
+                        new IndexFileProviderFactory(320, Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\CompanyName\SlideLibraryIndex")
+                        );
                 }
 
                 Gallery.ucLibraryView uxLibraryView = new Gallery.ucLibraryView() { LibraryData = library };

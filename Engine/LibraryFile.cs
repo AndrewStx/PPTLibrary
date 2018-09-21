@@ -78,6 +78,15 @@ namespace ShapesLibrary
             }
         }
 
+        public void Rename(string newName)
+        {
+            
+            File.Move( Path.Combine(Group.FullPath, Name), Path.Combine(Group.FullPath, newName));
+            Name = newName;
+            fileIndex.Rename();
+        }
+
+
         public List<IFileItem> AppendSlides(List<PPT.Slide> srcSlides)
         {
             PPT.Application ppt = null;

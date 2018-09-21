@@ -9,10 +9,17 @@ namespace ShapesLibrary
 
     public interface IGroup
     {
+        IGroup Parent
+        {
+            get;
+        }
+
         /// <summary>
         /// Logical Name of the group
         /// </summary>
         string Name { get; }
+
+        string FullName { get; }
 
         /// <summary>
         /// OS Path to the group folder
@@ -36,7 +43,7 @@ namespace ShapesLibrary
         /// <summary>
         /// List of Subfolders inside of this group
         /// </summary>
-        ReadOnlyCollection<IGroup> Folders { get; }
+        ReadOnlyCollection<IGroup> SubGroups { get; }
 
         IFile ShapesFile { get; }
 
@@ -57,12 +64,19 @@ namespace ShapesLibrary
         /// <returns></returns>
         IFile AddFile(string fileName, PPT.Presentation source);
 
+
         /// <summary>
         /// Return true is Group Folder contains file with specified name
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
         bool ContainsFile(string fileName);
+
+        IGroup CreateGroup(string name);
+
+        bool ContainsFolder(string name);
+
+        IFile AddFile(string fileName);
 
         /// <summary>
         /// Returns true if 
@@ -77,6 +91,14 @@ namespace ShapesLibrary
         /// Updates list of files and file indexes that need update
         /// </summary>
         void UpdateFilesList();
+
+        void Rename(string newName);
+
+        void Delete(IFile file);
+
+        void Delete(IGroup group);
+
+
     }
 
 }
