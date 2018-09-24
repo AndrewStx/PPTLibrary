@@ -7,7 +7,7 @@ namespace ShapesLibrary
     {
         IFile File { get; }
 
-        int Index { get; }
+        int Index { get; set; } //TODO: AST: use             item.File.Items.IndexOf(item)+1;
 
         string Title { get; set; }
 

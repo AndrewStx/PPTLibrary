@@ -73,8 +73,6 @@
             this.uxSelectFile.Name = "uxSelectFile";
             this.uxSelectFile.Size = new System.Drawing.Size(313, 304);
             this.uxSelectFile.TabIndex = 0;
-            this.uxSelectFile.FileSelected += new System.EventHandler<ucSelectFile.FileSelectedEventArgs>(this.uxSelectFile_FileSelected);
-            this.uxSelectFile.SelectionChanged += new System.EventHandler<ucSelectFile.FileSelectedEventArgs>(this.uxSelectFile_SelectionChanged);
             // 
             // SelectFileForm
             // 

@@ -178,7 +178,7 @@ namespace Gallery
                 dlg.SetDataSource(treeTable);
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    AddSelectedSlides(dlg.File);
+//                    AddSelectedSlides(dlg.File);
                 }
             }
         }
@@ -193,18 +193,33 @@ namespace Gallery
             {
                 SelectFileForm dlg = new SelectFileForm();
                 dlg.SetDataSource(treeTable);
+
                 if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    AddSelectedSlides(dlg.File);
+                    AddSelectedSlides(GetFile(dlg.File));
                 }
-
-                if (LibraryData.Personal.ShapesFile == null)
-                {
-                    LibraryData.Personal.CreateShapesFile();
-                }
-
-                AddSelectedSlides(LibraryData.Personal.ShapesFile);
             }
+        }
+
+
+        private IFile GetFile(object o)
+        {
+            IFile f = null;
+
+            if (o is IGroup group)
+            {
+                if (group.ShapesFile == null)
+                {
+                    group.CreateShapesFile();
+                }
+                f = group.ShapesFile;
+            }
+            else if (o is IFile file)
+            {
+                f = file;
+            }
+
+            return f;
         }
 
         public void AddSelectedShapes()
@@ -215,18 +230,26 @@ namespace Gallery
             }
             else
             {
-                if (LibraryData.Personal.ShapesFile == null)
-                {
-                    LibraryData.Personal.CreateShapesFile();
-                }
+                SelectFileForm dlg = new SelectFileForm();
+                dlg.SetDataSource(treeTable);
 
-                AddSelectedShapes(LibraryData.Personal.ShapesFile);
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    AddSelectedShapes(GetFile(dlg.File));
+                }
             }
         }
 
         public void PublishFileToPersonal()
         {
-            PublishFileIntoGroup(LibraryData.Personal);
+            SelectFileForm dlg = new SelectFileForm();
+            dlg.OnlyFolders = true;
+            dlg.SetDataSource(treeTable);
+
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                PublishFileIntoGroup(dlg.File as IGroup);
+            }
         }
 
         public void PublishFileToShared()
@@ -311,35 +334,94 @@ namespace Gallery
             if (item == null)
                 return;
 
-            PPT.Application ap = new PPT.Application();
-            PPT.Presentations pres = ap.Presentations;
+            PPT.Application app = new PPT.Application();
+            PPT.Presentations pres = app.Presentations;
 
-            PPT.Presentation gallery = pres.Open(item.File.FullPath, MsoTriState.msoFalse, MsoTriState.msoFalse, MsoTriState.msoFalse);
-            PPT.Slides gallerySlides = gallery.Slides;
-            PPT.Slide gallerySlide = gallerySlides[item.Index];
+            PPT.Presentation pptx = pres.Open(item.File.FullPath, MsoTriState.msoFalse, MsoTriState.msoFalse, MsoTriState.msoFalse);
+            PPT.Slides slides = pptx.Slides;
+            PPT.Slide slide = slides[item.Index];
 
             if (item.Type == ItemType.Slide)
             {
-                gallerySlide.Copy();
+                slide.Copy();
             }
             else
             {
-                gallerySlide.Shapes[1].Copy();
-            }
-            gallery.Close();
+                PPT.Shapes shapes = slide.Shapes;
+                PPT.Shape shape = shapes[1];
 
-            PPT.Presentation pr = ap.ActivePresentation;
-            PPT.Slides prSlides = pr.Slides;
+                shape.Copy();
+
+                shapes.ReleaseCOM();
+                shapes = null;
+                shape.ReleaseCOM();
+                shape = null;
+            }
+
+            PPT.Presentation dstpptx = app.ActivePresentation;
+
+            PPT.DocumentWindow wnd = app.ActiveWindow;
+            PPT.View view = wnd.View;
+
             //TODO: Check if there is no selection (selection between slides)
-            int ix = (ap.ActiveWindow.View.Slide as PPT.Slide).SlideIndex + 1; //TODO: 2 dots!
+            PPT.Slides dstSlides = dstpptx.Slides;
+            PPT.Slide dstSlide = null;
+
+            dstSlide = view.Slide as PPT.Slide;
+            int ix = dstSlide.SlideIndex + 1;
             if (item.Type == ItemType.Slide)
             {
-                pr.Slides.Paste(ix);
+                dstSlide.Copy();
+
+                var r = dstSlides.Paste(); //TODO: dstSlides.Paste(ix) Hangs here
+                var s = r[1];
+
+                s.MoveTo(ix);
+
+                s.ReleaseCOM();
+                s = null;
+
+                r.ReleaseCOM();
+                r = null;
             }
             else
             {
-                ap.ActiveWindow.View.Paste();
+                view.Paste();
             }
+
+            dstSlide.ReleaseCOM();
+            dstSlide = null;
+
+            wnd.ReleaseCOM();
+            wnd = null;
+
+            view.ReleaseCOM();
+            view = null;
+
+            dstpptx.ReleaseCOM();
+            dstpptx = null;
+
+
+            slide.ReleaseCOM();
+            slide = null;
+
+            slides.ReleaseCOM();
+            slides = null;
+
+            pptx.Close();
+            pptx.ReleaseCOM();
+            pptx = null;
+            
+            pres.ReleaseCOM();
+            pres = null;
+
+            app.ReleaseCOM();
+            app = null;
+
+            dstSlides.ReleaseCOM();
+            dstSlides = null;
+
+
         }
 
         private void uxAddToPersonal_Click(object sender, EventArgs e)
@@ -400,7 +482,6 @@ Make sure you have permission to create files at this location.";
 
         protected void PublishFileIntoGroup(IGroup group)
         {
-
             try
             {
                 timerCheckForUpdates.Enabled = false;
@@ -453,15 +534,30 @@ Make sure you have permission to create files at this location.";
                 }
             }
 
-            IFile file = group.AddFile(fileName, pres);
+
+            group.DeleteFile(fileName);
+
+            string newFilePath = Path.Combine(group.FullPath, Path.GetFileName(fileName));
+            pres.SaveCopyAs(newFilePath);
+
+
+            IFile file = group.AddFile(fileName);
+
+            pres.ReleaseCOM();
+            pres = null;
+
+            app.ReleaseCOM();
+            app = null;
+
             if (file != null)
             {
                 if (treeBuilder == null)
                 {
                     LoadLibraryData();
                 }
+
                 treeBuilder.AddFile(file);
-                Filter();
+                ReloadDataSource();
             }
         }
 
@@ -724,6 +820,8 @@ Make sure you have permission to create files at this location.";
 
             dsTree.TreeRow row = treeTable.FindByID((int)uxWhere.EditValue);
             var list = LibraryData.GetAllItems();
+            int n = list.Count();
+
             if (row.ParentID == -1)
             {
                 list = list.Where(item =>
@@ -980,6 +1078,28 @@ Make sure you have permission to create files at this location.";
             timerCheckForUpdates.Enabled = true;
         }
 
+        private void cmdDelete_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            DeleteItem(uxImagesView.SelectedItem);
+        }
+
+        private void DeleteItem(IFileItem item)
+        {
+            if (item == null)
+            {
+                return;
+            }
+
+            item.File.DeleteItem(uxImagesView.SelectedItem);
+            ReloadDataSource();
+        }
+
+        private void ReloadDataSource()
+        {
+            uxImagesView.DataSource = LibraryData.GetAllItems().ToList();
+            Filter();
+        }
+
     }
-   
+
 }

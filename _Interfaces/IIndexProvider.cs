@@ -34,6 +34,8 @@ namespace ShapesLibrary
         /// </summary>
         ReadOnlyCollection<IFileItem> Items { get; }
 
+        void DeleteItem(IFileItem item);
+
         void LoadIndex();
 
         void CreateIndex();

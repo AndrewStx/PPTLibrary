@@ -76,6 +76,7 @@
             this.barDockControlRight = new DevExpress.XtraBars.BarDockControl();
             this.timerCheckForUpdates = new System.Windows.Forms.Timer(this.components);
             this.behaviorManager1 = new DevExpress.Utils.Behaviors.BehaviorManager(this.components);
+            this.cmdDelete = new DevExpress.XtraBars.BarButtonItem();
             this.uxContainer.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.imageCollection1)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
@@ -280,15 +281,17 @@
             this.cmdManage,
             this.cmdChangeFolder,
             this.cmdOpenFolder,
-            this.cmdOpenFile});
-            this.barManager.MaxItemId = 8;
+            this.cmdOpenFile,
+            this.cmdDelete});
+            this.barManager.MaxItemId = 9;
             this.barManager.QueryShowPopupMenu += new DevExpress.XtraBars.QueryShowPopupMenuEventHandler(this.barManager_QueryShowPopupMenu);
             // 
             // pmList
             // 
             this.pmList.LinksPersistInfo.AddRange(new DevExpress.XtraBars.LinkPersistInfo[] {
             new DevExpress.XtraBars.LinkPersistInfo(this.cmdInsert),
-            new DevExpress.XtraBars.LinkPersistInfo(this.cmdOpenContainingFile, true)});
+            new DevExpress.XtraBars.LinkPersistInfo(this.cmdOpenContainingFile, true),
+            new DevExpress.XtraBars.LinkPersistInfo(this.cmdDelete)});
             this.pmList.Manager = this.barManager;
             this.pmList.Name = "pmList";
             // 
@@ -385,6 +388,13 @@
             this.timerCheckForUpdates.Interval = 5000;
             this.timerCheckForUpdates.Tick += new System.EventHandler(this.timerCheckForUpdates_Tick);
             // 
+            // cmdDelete
+            // 
+            this.cmdDelete.Caption = "Delete";
+            this.cmdDelete.Id = 8;
+            this.cmdDelete.Name = "cmdDelete";
+            this.cmdDelete.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.cmdDelete_ItemClick);
+            // 
             // ucLibraryView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -444,6 +454,7 @@
         private DevExpress.XtraBars.BarButtonItem cmdOpenFile;
         private System.Windows.Forms.Timer timerCheckForUpdates;
         private DevExpress.Utils.Behaviors.BehaviorManager behaviorManager1;
+        private DevExpress.XtraBars.BarButtonItem cmdDelete;
     }
 }
 

@@ -34,6 +34,8 @@ namespace ShapesLibrary
 
         IFileItem CreateItem(int id);
 
+        void DeleteItem(IFileItem item);
+
         void Rename(string newName);
     }
 

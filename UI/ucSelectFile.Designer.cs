@@ -41,12 +41,12 @@ namespace Gallery
             this.cmdRename = new DevExpress.XtraBars.BarButtonItem();
             this.cmdDelete = new DevExpress.XtraBars.BarButtonItem();
             this.cmdNewFolder = new DevExpress.XtraBars.BarButtonItem();
+            this.cmdNewFile = new DevExpress.XtraBars.BarButtonItem();
             this.barManager1 = new DevExpress.XtraBars.BarManager(this.components);
             this.barDockControlTop = new DevExpress.XtraBars.BarDockControl();
             this.barDockControlBottom = new DevExpress.XtraBars.BarDockControl();
             this.barDockControlLeft = new DevExpress.XtraBars.BarDockControl();
             this.barDockControlRight = new DevExpress.XtraBars.BarDockControl();
-            this.cmdNewFile = new DevExpress.XtraBars.BarButtonItem();
             ((System.ComponentModel.ISupportInitialize)(this.uxTree)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.repositoryItemTextEdit1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.treeBindingSource)).BeginInit();
@@ -89,6 +89,7 @@ namespace Gallery
             this.uxTree.CellValueChanging += new DevExpress.XtraTreeList.CellValueChangedEventHandler(this.uxTree_CellValueChanging);
             this.uxTree.CellValueChanged += new DevExpress.XtraTreeList.CellValueChangedEventHandler(this.uxTree_CellValueChanged);
             this.uxTree.ShowingEditor += new System.ComponentModel.CancelEventHandler(this.uxTree_ShowingEditor);
+            this.uxTree.KeyDown += new System.Windows.Forms.KeyEventHandler(this.uxTree_KeyDown);
             // 
             // treeListColumn1
             // 
@@ -132,6 +133,7 @@ namespace Gallery
             // pmTree
             // 
             this.pmTree.LinksPersistInfo.AddRange(new DevExpress.XtraBars.LinkPersistInfo[] {
+            new DevExpress.XtraBars.LinkPersistInfo(this.cmdNewFile),
             new DevExpress.XtraBars.LinkPersistInfo(this.cmdRename),
             new DevExpress.XtraBars.LinkPersistInfo(this.cmdDelete),
             new DevExpress.XtraBars.LinkPersistInfo(this.cmdNewFolder),
@@ -143,12 +145,14 @@ namespace Gallery
             // 
             this.cmdRename.Caption = "Rename";
             this.cmdRename.Id = 0;
+            this.cmdRename.ItemShortcut = new DevExpress.XtraBars.BarShortcut(System.Windows.Forms.Keys.F2);
             this.cmdRename.Name = "cmdRename";
             // 
             // cmdDelete
             // 
             this.cmdDelete.Caption = "Delete";
             this.cmdDelete.Id = 1;
+            this.cmdDelete.ItemShortcut = new DevExpress.XtraBars.BarShortcut(System.Windows.Forms.Keys.Delete);
             this.cmdDelete.Name = "cmdDelete";
             // 
             // cmdNewFolder
@@ -156,6 +160,12 @@ namespace Gallery
             this.cmdNewFolder.Caption = "New Folder";
             this.cmdNewFolder.Id = 2;
             this.cmdNewFolder.Name = "cmdNewFolder";
+            // 
+            // cmdNewFile
+            // 
+            this.cmdNewFile.Caption = "New File";
+            this.cmdNewFile.Id = 3;
+            this.cmdNewFile.Name = "cmdNewFile";
             // 
             // barManager1
             // 
@@ -202,12 +212,6 @@ namespace Gallery
             this.barDockControlRight.Location = new System.Drawing.Point(304, 0);
             this.barDockControlRight.Manager = this.barManager1;
             this.barDockControlRight.Size = new System.Drawing.Size(0, 249);
-            // 
-            // cmdNewFile
-            // 
-            this.cmdNewFile.Caption = "New File";
-            this.cmdNewFile.Id = 3;
-            this.cmdNewFile.Name = "cmdNewFile";
             // 
             // ucSelectFile
             // 

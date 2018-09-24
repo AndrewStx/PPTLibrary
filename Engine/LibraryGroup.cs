@@ -36,11 +36,15 @@ namespace ShapesLibrary
         /// </summary>
         public ReadOnlyCollection<IFile> Files { get { return files.AsReadOnly(); } }
 
-        public ReadOnlyCollection<IFile> AllFiles { get { return allFiles.AsReadOnly(); } }
+        public ReadOnlyCollection<IFile> GetAllFiles {
+            get {
+
+                List<IFile> f = new List<IFile>(files);
+                subGroups.ForEach(g => f.AddRange(g.GetAllFiles));
+
+                return f.AsReadOnly(); } }
 
         protected List<IFile> files = new List<IFile>();
-
-        protected List<IFile> allFiles = new List<IFile>();
 
         public ReadOnlyCollection<IGroup> SubGroups { get { return subGroups.AsReadOnly(); } }
 
@@ -88,7 +92,6 @@ namespace ShapesLibrary
         public void LoadFiles(bool forceToRebuildIndex)
         {
             files.Clear();
-            allFiles.Clear();
 
             if (!string.IsNullOrEmpty(FullPath) && Directory.Exists(FullPath))
             {
@@ -103,7 +106,6 @@ namespace ShapesLibrary
                         //TODO:
                     }
                 }
-                allFiles.AddRange(files);
 
                 foreach (string path in Directory.GetDirectories(FullPath))
                 {
@@ -113,7 +115,6 @@ namespace ShapesLibrary
                     group.LoadFiles(forceToRebuildIndex);
 
                     subGroups.Add(group);
-                    allFiles.AddRange(group.AllFiles);
                 }
             }
         }
@@ -141,7 +142,7 @@ namespace ShapesLibrary
         }
 
         /// <summary>
-        /// Returns true if Group Folder contain file with specified name
+        /// Returns true if Group Directory contain file with specified name
         /// </summary>
         /// <param name="fileName"></param>
         /// <returns></returns>
@@ -151,7 +152,7 @@ namespace ShapesLibrary
         }
 
         /// <summary>
-        /// Returns true if Group Folder contain file with specified name
+        /// Returns true if Group Directory contain file with specified name
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -167,7 +168,6 @@ namespace ShapesLibrary
             group.LoadFiles(false);
 
             subGroups.Add(group);
-            allFiles.AddRange(group.AllFiles);
 
             return group;
         }
@@ -194,7 +194,30 @@ namespace ShapesLibrary
             try
             {
                 source.SaveCopyAs(newFilePath);
+                source = null;
 
+                file = new LibraryFile(this, fileName, indexFileFactory);
+                file.LoadItems(true);
+
+                files.Add(file);
+                return file;
+            }
+            catch (Exception ex)
+            {
+                if (file != null)
+                {
+                    files.Remove(file);
+                    file.Delete();
+                }
+                throw ex;
+            }
+        }
+
+        public IFile AddFile(string fileName)
+        {
+            IFile file = null;
+            try
+            {
                 file = new LibraryFile(this, fileName, indexFileFactory);
                 file.LoadItems(true);
 
@@ -211,19 +234,6 @@ namespace ShapesLibrary
                 }
                 throw ex;
             }
-        }
-
-        public IFile AddFile(string fileName)
-        {
-            string newFilePath = Path.Combine(FullPath, Path.GetFileName(fileName));
-
-            var file = new LibraryFile(this, fileName, indexFileFactory);
-            file.LoadItems(true);
-
-            files.Add(file);
-
-            return file;
-
         }
 
 
@@ -370,7 +380,13 @@ namespace ShapesLibrary
 
         public IEnumerable<IFileItem> GetAllItems()
         {
-            foreach (IFile file in AllFiles)
+            return GetFilesItems().Concat(GetGroupsItems());
+        }
+
+
+        private IEnumerable<IFileItem> GetFilesItems()
+        {
+            foreach (IFile file in Files)
             {
                 foreach (IFileItem item in file.Items)
                 {
@@ -380,12 +396,37 @@ namespace ShapesLibrary
 
         }
 
+        private IEnumerable<IFileItem> GetGroupsItems()
+        {
+            IEnumerable<IFileItem> v = Enumerable.Empty < IFileItem > ();
+
+            
+            foreach (IGroup group in subGroups)
+            {
+                v = v.Concat(group.GetAllItems());
+            }
+
+            return v;
+        }
+
+
+        public void DeleteFile(string fileName) 
+        {
+            string newFilePath = Path.Combine(FullPath, Path.GetFileName(fileName));
+
+            IFile file = files.Where(l => l.FullPath == newFilePath).FirstOrDefault();
+
+            if (file != null)
+            {
+                file.Delete();
+                files.Remove(file);
+            }
+
+        }
 
         public void Delete(IFile file)
         {
             file.Delete();
-
-            allFiles.Remove(file);
             files.Remove(file);
         }
 
@@ -400,7 +441,6 @@ namespace ShapesLibrary
             indexFileFactory.DeleteGroup(group.FullName);
 
             subGroups.Remove(group);
-            group.AllFiles.ForEach(file => allFiles.Remove(file));
 
         }
     }

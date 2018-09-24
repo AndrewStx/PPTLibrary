@@ -8,7 +8,7 @@ namespace ShapesLibrary
     {
         public IFile File { get; protected set; }
 
-        public int Index { get; protected set; }
+        public int Index { get;  set; }
 
         public ItemType Type { get; set; }
 

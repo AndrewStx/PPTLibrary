@@ -34,7 +34,7 @@ namespace ShapesLibrary
         /// <summary>
         /// Returns all files in group including subfolders
         /// </summary>
-        ReadOnlyCollection<IFile> AllFiles { get; }
+        ReadOnlyCollection<IFile> GetAllFiles { get; }
 
 
         IEnumerable<IFileItem> GetAllItems();
@@ -93,6 +93,8 @@ namespace ShapesLibrary
         void UpdateFilesList();
 
         void Rename(string newName);
+
+        void DeleteFile(string fileName);
 
         void Delete(IFile file);
 

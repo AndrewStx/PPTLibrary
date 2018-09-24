@@ -92,17 +92,17 @@ namespace ShapesLibrary
             DeleteIndexFile();
             CreateIndexFile();
             
-            PPT.Application ppt = null;
-            PPT.Presentations pres = null;
-            PPT.Presentation presentation = null;
+            PPT.Application app = null;
+            PPT.Presentations preentations = null;
+            PPT.Presentation pptx = null;
             try
             {
-                ppt = new PPT.Application();
-                pres = ppt.Presentations;
-                presentation = pres.Open(LibraryFile.FullPath, MsoTriState.msoTrue, MsoTriState.msoFalse, MsoTriState.msoFalse);
-                PPT.Slides gSlides = presentation.Slides;
+                app = new PPT.Application();
+                preentations = app.Presentations;
+                pptx = preentations.Open(LibraryFile.FullPath, MsoTriState.msoTrue, MsoTriState.msoFalse, MsoTriState.msoFalse);
+//                PPT.Slides gSlides = pptx.Slides;
                 
-                UpdateIndex(presentation, 1);
+                UpdateIndex(pptx, 1);
             }
             catch (Exception ex)
             {
@@ -111,16 +111,15 @@ namespace ShapesLibrary
             }
             finally
             {
-                presentation?.Close();
+                pptx?.Close();
+                pptx.ReleaseCOM();
+                pptx = null;
 
-                //                gallery.ReleaseCOM();
-                presentation = null;
+                preentations.ReleaseCOM();
+                preentations = null;
 
-                //                pres.ReleaseCOM();
-                pres = null;
-
-                ppt.ReleaseCOM();
-                ppt = null;
+                app.ReleaseCOM();
+                app = null;
             }
         }
 
@@ -568,7 +567,53 @@ namespace ShapesLibrary
 
         #endregion
 
+        public void DeleteItem(IFileItem item)
+        {
+            if (item == null)
+            {
+                return;
+            }
 
+            DeleteSlide(item.Index);
 
+            items.Remove(item);
+            for (int i= item.Index-1; i< items.Count; i++)
+            {
+                items[i].Index = i+1;
+            }
+        }
+
+        private void DeleteSlide(int index)
+        {
+            //TODO: try-catch
+            PPT.Application app = new PPT.Application();
+            PPT.Presentations pres = app.Presentations;
+
+            PPT.Presentation pptx = pres.Open(LibraryFile.FullPath, MsoTriState.msoFalse, MsoTriState.msoFalse, MsoTriState.msoFalse);
+
+            PPT.Slides slides = pptx.Slides;
+            PPT.Slide slide = slides[index];
+
+            slide.Delete();
+
+            pptx.Save();
+            pptx.Close();
+
+            slide.ReleaseCOM();
+            slide = null;
+
+            slides.ReleaseCOM();
+            slides = null;
+
+            pptx.ReleaseCOM();
+            pptx = null;
+
+            pres.ReleaseCOM();
+            pres = null;
+
+            app.ReleaseCOM();
+            app = null;
+
+        }
     }
 }

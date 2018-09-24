@@ -5,7 +5,10 @@ namespace Gallery
 {
     public partial class SelectFileForm : DevExpress.XtraEditors.XtraForm
     {
-        public LibraryFile File { get; protected set; }
+        public object File { get => uxSelectFile.SelectedFile; }
+
+        public bool OnlyFolders { get => uxSelectFile.OnlyFolders; set => uxSelectFile.OnlyFolders = value; }
+
         public SelectFileForm()
         {
             InitializeComponent();
@@ -16,22 +19,19 @@ namespace Gallery
             uxSelectFile.SetDataSource(table);
         }
 
-        private void uxSelectFile_FileSelected(object sender, ucSelectFile.FileSelectedEventArgs e)
+        private void uxSelectFile_FileSelected(object sender, EventArgs e)
         {
-            File = e.File;
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.Close();
         }
 
-        private void uxSelectFile_SelectionChanged(object sender, ucSelectFile.FileSelectedEventArgs e)
+        private void uxSelectFile_SelectionChanged(object sender, EventArgs e)
         {
-            File = uxSelectFile.SelectedFile;
-            uxOK.Enabled = e.File != null;
+            uxOK.Enabled = File != null;
         }
 
         private void uxOK_Click(object sender, EventArgs e)
         {
-            File = uxSelectFile.SelectedFile;
         }
 
     }

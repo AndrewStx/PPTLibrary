@@ -108,14 +108,26 @@ namespace ShapesLibrary
         public void AddFile(IFile file)
         {
             var groupRow = table.Where(row =>
-                    row.Data is LibraryGroup && (row.Data as LibraryGroup).Name == file.Group.Name
+                    (row.Data is IGroup g) && g.FullName == file.Group.FullName
                 ).FirstOrDefault();
 
             if (groupRow != null)
             {
-                table.AddTreeRow(groupRow.ID, 4, Path.GetFileNameWithoutExtension(file.Name), file, false);
+                string name = System.IO.Path.GetFileNameWithoutExtension(file.Name);
+                var fileRow = table.Where(
+                    row => row.ParentID == groupRow.ID && row.Name == name && row.Data is IFile)
+                    .FirstOrDefault();
+                if (fileRow == null)
+                {
+                    table.AddTreeRow(groupRow.ID, 4, Path.GetFileNameWithoutExtension(file.Name), file, false);
+                }
+                else
+                {
+                    fileRow.Data = file;
+                }
             }
 
         }
+
     }
 }

@@ -223,6 +223,11 @@ namespace ShapesLibrary
                 return false;
             }
         }
+
+        public void DeleteItem(IFileItem item)
+        {
+            fileIndex.DeleteItem(item);
+        }
     }
 
  }

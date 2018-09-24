@@ -16,21 +16,15 @@ namespace Gallery
     [DefaultEvent("SelectionChanged")]
     public partial class ucSelectFile : UserControl
     {
-        public class FileSelectedEventArgs : EventArgs
-        {
-            public LibraryFile File { get; protected set; }
-            
-            public FileSelectedEventArgs(LibraryFile file)
-            {
-                File = file;
-            }
-        }
+        public bool ShowSystemGroup { get; set; } = false;
 
-        public event EventHandler<FileSelectedEventArgs> FileSelected;
+        public event EventHandler<EventArgs> FileSelected;
 
-        public event EventHandler<FileSelectedEventArgs> SelectionChanged;
+        public event EventHandler<EventArgs> SelectionChanged;
 
-        public LibraryFile SelectedFile { get; protected set; }
+        public object SelectedFile { get; protected set; }
+
+        public bool OnlyFolders { get; set; }
 
         private dsTree.TreeDataTable dtTree;
 
@@ -51,9 +45,16 @@ namespace Gallery
 
         void uxTree_FocusedNodeChanged(object sender, FocusedNodeChangedEventArgs e)
         {
-            dsTree.TreeRow row = (uxTree.GetDataRecordByNode(uxTree.FocusedNode) as DataRowView).Row as dsTree.TreeRow;
-            SelectedFile = row.Data as LibraryFile;
-            SelectionChanged?.Invoke(this, new FileSelectedEventArgs(row.Data as LibraryFile));
+            bool readOnly = (FocusedRow.ReadOnly || FocusedRow.ParentID == 1);
+
+            cmdDelete.Enabled = !readOnly;
+            cmdRename.Enabled = !readOnly;
+
+            cmdNewFile.Enabled = !readOnly && FocusedRow.Data is IGroup;
+            cmdNewFolder.Enabled = !readOnly && FocusedRow.Data is IGroup;
+
+            SelectedFile = FocusedRow.Data;
+            SelectionChanged?.Invoke(this, new EventArgs());
         }
 
         public void ResetFocus()
@@ -72,9 +73,22 @@ namespace Gallery
             //            uxWhere.RootValue = 1;
             DataView dv = new DataView();
             dv.Table = dtTree;
-            dv.RowFilter = "ReadOnly=false AND ParentID <> -1";
+            string RowFilter = "";
+            if (!ShowSystemGroup)
+            {
+                RowFilter = "ReadOnly = false AND ParentID <> -1";
+            }
+            else
+            {
+                RowFilter = "ParentID <> -1";
+            }
+
+            RowFilter += OnlyFolders ? " AND ImageID <> 4" : "";
+
+            dv.RowFilter = RowFilter;
+
             uxTree.DataSource = dv;
-            
+
             uxTree.ExpandAll();
         }
 
@@ -93,7 +107,7 @@ namespace Gallery
                 {
                     dsTree.TreeRow row = (uxTree.GetDataRecordByNode(hi.Node) as DataRowView).Row as dsTree.TreeRow;
                     if (FileSelected != null)
-                        FileSelected(this, new FileSelectedEventArgs(row.Data as LibraryFile));
+                        FileSelected(this, new EventArgs());
                 }
             }
         }
@@ -102,7 +116,7 @@ namespace Gallery
         {
             dsTree.TreeRow row = (uxTree.GetDataRecordByNode(uxTree.FocusedNode) as DataRowView).Row as dsTree.TreeRow;
 
-            if (row.ParentID == -1)
+            if (row.ReadOnly || row.ParentID == 1)
             {
                 e.Cancel = true;
             }
@@ -195,6 +209,22 @@ namespace Gallery
 
         private void cmdDelete_ItemClick(object sender, DevExpress.XtraBars.ItemClickEventArgs e)
         {
+            OnDelete();
+        }
+
+        private void OnDelete()
+        {
+            if (FocusedRow.ReadOnly || FocusedRow.ParentID == 1)
+            {
+                return;
+            }
+
+            if (MessageBox.Show("Are you sure to delete? There is no undo for this action.", "Mekko Graphics", MessageBoxButtons.OKCancel) ==
+                DialogResult.Cancel)
+            {
+                return;
+            }
+
             if (FocusedRow.Data is IFile file)
             {
                 file.Group.Delete(file);
@@ -208,11 +238,10 @@ namespace Gallery
             }
         }
 
-
         void RemoveRow(dsTree.TreeRow row)
         {
-            var rows = dtTree.Where(r => r.ParentID == row.ID).Select(r=>r).ToArray();
-            rows.ForEach(r => RemoveRow(r) );
+            var rows = dtTree.Where(r => r.ParentID == row.ID).Select(r => r).ToArray();
+            rows.ForEach(r => RemoveRow(r));
             dtTree.RemoveTreeRow(row);
         }
 
@@ -252,7 +281,7 @@ namespace Gallery
                 int cnt = 2;
                 while (group.ContainsFile(name)) //TODO: AST: Limit number of iterations
                 {
-                    name = Path.Combine(baseName + $" ({cnt++})")+ ".pptx";
+                    name = Path.Combine(baseName + $" ({cnt++})") + ".pptx";
                 }
                 var fullPath = Path.Combine(group.FullPath, name);
 
@@ -298,6 +327,12 @@ namespace Gallery
 
         }
 
+        private void uxTree_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
 
+            }
+        }
     }
 }
